@@ -1,0 +1,78 @@
+﻿@page "/fetchdata"
+@using SelectBindingBug.Shared
+@inject HttpClient Http
+@using Newtonsoft.Json
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                    <td>
+
+                        @if (forecast.Valid == 1)
+                        {
+                            @if (forecast.SelectedIndex != null)
+                            {
+                                <span>@forecast.WeatherItems[forecast.SelectedIndex.Value]</span>
+                            }
+                        }
+                        else
+                        {
+                            <select @bind="@forecast.SelectedIndex">
+                                <option value=""></option>
+                                @foreach (var value in forecast.WeatherItems)
+                                {
+                                    <option value="@value.Key">@value.Value</option>
+                                }
+                            </select>
+
+                                                }
+                        @if (forecast.Valid == 1)
+                        {
+                            <button class="werteErfassungButton unsetValid" title="Validitätskennzeichnung aufheben" @onclick="@(() => forecast.Valid = 0)" tabindex="-1">Unset</button>
+                        }
+                        else
+                        {
+                            <button class="werteErfassungButton setValid" title="Wert valide setzen" @onclick="@(() => forecast.Valid = 1)" tabindex="-1">Set</button>
+                        }
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<WeatherForecast> forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var forecasts_str = await Http.GetStringAsync("WeatherForecast");
+        forecasts = JsonConvert.DeserializeObject<WeatherForecast[]>(forecasts_str).ToList();
+    }
+
+}
